@@ -1,0 +1,1433 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>RetroNet Blog</title>
+  <style>
+    :root{
+      --bg: #8aa0b8;         /* icy blue */
+      --panel: #c7c7c7;      /* 2000s UI gray */
+      --panel2:#bdbdbd;
+      --ink:#0b0b0b;
+      --link:#1a4fff;
+      --accent:#0d56ff;      /* blue highlight */
+      --green:#35ff72;
+      --danger:#ff4040;
+      --shadow: rgba(0,0,0,.35);
+      --radius: 2px;
+      --border: rgba(0,0,0,.55);
+      --grid: rgba(255,255,255,.14);
+      --scan: rgba(255,255,255,.06);
+    }
+
+    *{ box-sizing:border-box; }
+    body{
+      margin:0;
+      font-family: "MS Sans Serif", Tahoma, Arial, sans-serif;
+      color: var(--ink);
+      background:
+        linear-gradient(var(--grid) 1px, transparent 1px),
+        linear-gradient(90deg, var(--grid) 1px, transparent 1px),
+        radial-gradient(circle at 20% 10%, rgba(255,255,255,.25), transparent 35%),
+        linear-gradient(180deg, #7f98b4, var(--bg));
+      background-size: 22px 22px, 22px 22px, auto, auto;
+      background-attachment: fixed, fixed, fixed, fixed;
+      position: relative;
+      overflow-x:hidden;
+    }
+    body::before{
+      content:"";
+      position:fixed;
+      inset:0;
+      pointer-events:none;
+      background:
+        repeating-linear-gradient(180deg, transparent 0px, transparent 2px, var(--scan) 3px);
+      mix-blend-mode: overlay;
+      opacity:.55;
+    }
+    body::after{
+      content:"";
+      position:fixed;
+      left:-20%;
+      top:-10%;
+      width:140%;
+      height:140%;
+      pointer-events:none;
+      background:
+        radial-gradient(circle at 50% 50%, rgba(255,255,255,.06), transparent 55%);
+      transform: rotate(-2deg);
+      opacity:.6;
+    }
+
+    .window{
+      width: min(1100px, 92vw);
+      margin: 18px auto;
+      border: 2px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--panel);
+      box-shadow: 0 14px 30px var(--shadow);
+      position: relative;
+      overflow:hidden;
+    }
+    .window .titlebar{
+      height: 34px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      padding: 0 10px;
+      background: linear-gradient(180deg, #0b2fbf, #0833d7);
+      color: #fff;
+      border-bottom: 2px solid rgba(0,0,0,.45);
+      position: relative;
+    }
+    .titlebar .left{
+      display:flex;
+      gap:8px;
+      align-items:center;
+      min-width:0;
+    }
+    .badge-dot{
+      width: 12px; height: 12px;
+      background: radial-gradient(circle at 30% 30%, #fff, #ff2d2d 35%, #7a0000 70%);
+      border: 1px solid rgba(0,0,0,.55);
+      border-radius: 50%;
+      box-shadow: 0 0 0 2px rgba(255,255,255,.08) inset;
+    }
+    .appname{
+      font-weight: 700;
+      letter-spacing:.2px;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+    .window .controls{
+      display:flex;
+      gap:6px;
+    }
+    .ctrl{
+      width: 18px; height:18px;
+      border: 2px solid rgba(0,0,0,.55);
+      background: linear-gradient(180deg, #f3f3f3, #bdbdbd);
+      border-radius: 2px;
+      box-shadow: 0 1px 0 rgba(255,255,255,.5) inset;
+    }
+
+    .toolbar{
+      padding: 10px;
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px;
+      align-items:center;
+      background: linear-gradient(180deg, var(--panel), var(--panel2));
+      border-bottom: 2px solid rgba(0,0,0,.25);
+    }
+
+    .btn, .chip, .input{
+      border: 2px solid rgba(0,0,0,.55);
+      background: linear-gradient(180deg, #efefef, #bdbdbd);
+      border-radius: var(--radius);
+      padding: 8px 10px;
+      font-family: inherit;
+      font-size: 14px;
+      color: var(--ink);
+      box-shadow: 0 2px 0 rgba(255,255,255,.55) inset;
+      cursor:pointer;
+      user-select:none;
+      transition: transform .05s ease;
+    }
+    .btn:active, .chip:active{
+      transform: translateY(1px);
+    }
+    .btn.primary{
+      background: linear-gradient(180deg, #1f6bff, #0b3bb0);
+      color:#fff;
+    }
+    .chip{
+      padding: 6px 10px;
+      display:inline-flex;
+      gap:8px;
+      align-items:center;
+      cursor:pointer;
+    }
+    .chip .mini{
+      width:10px; height:10px;
+      border:1px solid rgba(0,0,0,.55);
+      background: #3a3a3a;
+    }
+    .chip[data-active="true"]{
+      border-color: rgba(0,0,0,.75);
+      outline: 2px solid rgba(13,86,255,.25);
+    }
+    .input{
+      display:flex; align-items:center; gap:8px;
+      padding: 6px 10px;
+      min-width: 260px;
+      flex:1;
+    }
+    .input label{
+      font-weight:700;
+      font-size: 12px;
+      letter-spacing:.6px;
+      opacity:.9;
+      text-transform:uppercase;
+    }
+    .input input{
+      border: 0;
+      outline: none;
+      background: transparent;
+      width: 100%;
+      font-size: 14px;
+      font-family: inherit;
+    }
+
+    .content{
+      display:grid;
+      grid-template-columns: 280px 1fr;
+      gap: 14px;
+      padding: 14px;
+    }
+    @media (max-width: 900px){
+      .content{ grid-template-columns: 1fr; }
+    }
+
+    .sidebar{
+      border: 2px solid rgba(0,0,0,.35);
+      background: linear-gradient(180deg, #d7d7d7, #bdbdbd);
+      border-radius: var(--radius);
+      overflow:hidden;
+    }
+    .side-header{
+      padding: 10px;
+      border-bottom: 2px solid rgba(0,0,0,.25);
+      background: linear-gradient(180deg, #f4f4f4, #d4d4d4);
+      display:flex; align-items:center; justify-content:space-between; gap:10px;
+      font-weight:800;
+    }
+    .side-body{
+      padding: 10px;
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+    }
+
+    .meter{
+      border: 2px solid rgba(0,0,0,.45);
+      background: #a8a8a8;
+      border-radius: var(--radius);
+      padding: 8px;
+    }
+    .meter .row{
+      display:flex; justify-content:space-between; gap:10px;
+      font-size:12px;
+      font-weight:700;
+      opacity:.95;
+    }
+    .bar{
+      height: 12px;
+      border: 2px solid rgba(0,0,0,.5);
+      background: #7d7d7d;
+      margin-top:8px;
+      position:relative;
+      overflow:hidden;
+    }
+    .bar > span{
+      display:block;
+      height:100%;
+      width: 62%;
+      background: linear-gradient(90deg, #0df5ff, #19ff78, #35ff72);
+      box-shadow: 0 0 12px rgba(53,255,114,.35);
+    }
+
+    .main{
+      border: 2px solid rgba(0,0,0,.35);
+      background: linear-gradient(180deg, #dedede, #c6c6c6);
+      border-radius: var(--radius);
+      overflow:hidden;
+      min-height: 520px;
+    }
+    .main-header{
+      padding: 10px 12px;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:10px;
+      border-bottom: 2px solid rgba(0,0,0,.25);
+      background: linear-gradient(180deg, #f4f4f4, #d0d0d0);
+    }
+    .crumbs{
+      font-weight:800;
+      letter-spacing:.3px;
+      font-size: 13px;
+      display:flex; gap:8px; align-items:center;
+      flex-wrap:wrap;
+    }
+    .crumb{
+      padding: 4px 8px;
+      border: 2px solid rgba(0,0,0,.45);
+      background: linear-gradient(180deg, #f0f0f0, #bdbdbd);
+      border-radius: var(--radius);
+      cursor:pointer;
+      user-select:none;
+    }
+    .crumb.muted{
+      background: linear-gradient(180deg, #ececec, #c4c4c4);
+      opacity:.85;
+    }
+
+    .posts{
+      padding: 12px;
+      display:flex;
+      flex-direction:column;
+      gap: 12px;
+    }
+    .post{
+      border: 2px solid rgba(0,0,0,.35);
+      background: #d7d7d7;
+      border-radius: var(--radius);
+      overflow:hidden;
+    }
+    .post .head{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:10px;
+      padding: 10px;
+      background: linear-gradient(180deg, #f5f5f5, #cfcfcf);
+      border-bottom: 2px solid rgba(0,0,0,.25);
+    }
+    .post .head .meta{
+      display:flex; flex-direction:column; gap:3px;
+      min-width:0;
+    }
+    .post .title{
+      font-weight: 900;
+      letter-spacing:.2px;
+      overflow:hidden;
+      text-overflow:ellipsis;
+      white-space:nowrap;
+      max-width: 100%;
+    }
+    .post .sub{
+      font-size: 12px;
+      font-weight: 700;
+      opacity:.9;
+      display:flex;
+      flex-wrap:wrap;
+      gap:8px;
+      align-items:center;
+    }
+    .tag{
+      display:inline-flex;
+      gap:6px;
+      align-items:center;
+      padding: 3px 8px;
+      border: 1px dashed rgba(0,0,0,.45);
+      background: rgba(255,255,255,.25);
+      border-radius: 999px;
+    }
+    .dot{
+      width: 8px; height: 8px;
+      background: var(--accent);
+      border: 1px solid rgba(0,0,0,.55);
+      border-radius: 50%;
+      box-shadow: 0 0 12px rgba(13,86,255,.25);
+    }
+
+    .post .tools{
+      display:flex; gap:8px; align-items:center; flex-wrap:wrap;
+    }
+
+    .post .body{
+      padding: 10px;
+      display:grid;
+      grid-template-columns: 120px 1fr;
+      gap: 12px;
+      align-items:start;
+    }
+    @media (max-width: 700px){
+      .post .body{ grid-template-columns: 1fr; }
+    }
+
+    .preview{
+      height: 90px;
+      border: 2px solid rgba(0,0,0,.45);
+      background:
+        linear-gradient(135deg, rgba(13,86,255,.25), transparent 60%),
+        repeating-linear-gradient(90deg, rgba(0,0,0,.15) 0 2px, transparent 2px 8px),
+        #bdbdbd;
+      position:relative;
+      overflow:hidden;
+    }
+    .preview::after{
+      content:"";
+      position:absolute;
+      inset:-40% -10%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,.18), transparent);
+      transform: rotate(12deg);
+      animation: sheen 3.6s linear infinite;
+      opacity:.8;
+    }
+    @keyframes sheen{
+      0% { transform: translateX(-30%) rotate(12deg); }
+      100% { transform: translateX(30%) rotate(12deg); }
+    }
+
+    .excerpt{
+      font-size: 14px;
+      line-height: 1.45;
+      font-weight: 600;
+      opacity:.95;
+    }
+    .post .footer{
+      padding: 10px;
+      border-top: 2px solid rgba(0,0,0,.25);
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:10px;
+      flex-wrap:wrap;
+      background: linear-gradient(180deg, #d0d0d0, #c0c0c0);
+    }
+    .readlink{
+      color: var(--link);
+      font-weight: 900;
+      text-decoration: none;
+      border-bottom: 2px dotted rgba(26,79,255,.65);
+      cursor:pointer;
+    }
+    .readlink:hover{ opacity:.9; }
+
+    .like{
+      display:flex; gap:8px; align-items:center;
+    }
+    .like .heart{
+      width: 16px; height: 16px;
+      background: #ff4d4d;
+      transform: rotate(45deg);
+      border: 1px solid rgba(0,0,0,.45);
+      position:relative;
+      box-shadow: 0 0 10px rgba(255,77,77,.3);
+    }
+    .like .heart::before,
+    .like .heart::after{
+      content:"";
+      position:absolute;
+      width: 16px; height: 16px;
+      background:#ff4d4d;
+      border: 1px solid rgba(0,0,0,.45);
+      border-radius: 50%;
+      left: -8px; top: 0;
+    }
+    .like .heart::after{
+      left: 0; top: -8px;
+    }
+
+    .pagination{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:10px;
+      flex-wrap:wrap;
+      padding: 0 12px 12px;
+    }
+    .pagination-info{
+      font-size:12px;
+      font-weight:800;
+      opacity:.9;
+    }
+    .pagination-controls{
+      display:flex;
+      gap:8px;
+      align-items:center;
+      flex-wrap:wrap;
+    }
+    .page-btn:disabled{
+      opacity:.55;
+      cursor:not-allowed;
+    }
+
+    .modal-backdrop{
+      position:fixed;
+      inset:0;
+      background: rgba(0,0,0,.35);
+      display:none;
+      place-items:center;
+      padding: 18px;
+      z-index: 50;
+    }
+    .modal-backdrop.show{ display:grid; }
+    .modal{
+      width: min(760px, 96vw);
+      border: 2px solid rgba(0,0,0,.65);
+      background: var(--panel);
+      box-shadow: 0 16px 40px rgba(0,0,0,.45);
+      border-radius: var(--radius);
+      overflow:hidden;
+    }
+    .modal .mhead{
+      height: 34px;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      padding: 0 10px;
+      background: linear-gradient(180deg, #0b2fbf, #0833d7);
+      color: #fff;
+      border-bottom: 2px solid rgba(0,0,0,.45);
+    }
+    .modal .mbody{
+      padding: 12px;
+      display:grid;
+      grid-template-columns: 1fr;
+      gap: 10px;
+      background: linear-gradient(180deg, #d7d7d7, #c3c3c3);
+    }
+    .kbd{
+      display:inline-block;
+      padding: 2px 6px;
+      border: 2px solid rgba(0,0,0,.55);
+      background: #e8e8e8;
+      border-radius: 4px;
+      font-weight: 900;
+      font-size: 12px;
+    }
+    .modal .actions{
+      padding: 12px;
+      border-top: 2px solid rgba(0,0,0,.25);
+      display:flex;
+      justify-content:flex-end;
+      gap:10px;
+      background: linear-gradient(180deg, #d0d0d0, #c0c0c0);
+    }
+
+    .statusbar{
+      padding: 10px 14px;
+      border-top: 2px solid rgba(0,0,0,.25);
+      background: linear-gradient(180deg, #f4f4f4, #cfcfcf);
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:10px;
+      flex-wrap:wrap;
+      font-weight:800;
+      font-size: 12px;
+      letter-spacing:.2px;
+    }
+    .blink{
+      display:inline-block;
+      width: 10px;
+      height: 10px;
+      background: var(--green);
+      border: 1px solid rgba(0,0,0,.55);
+      box-shadow: 0 0 12px rgba(53,255,114,.35);
+      animation: blink 1.1s steps(2) infinite;
+    }
+    @keyframes blink{
+      0%,49% { opacity: 1; }
+      50%,100%{ opacity: .15; }
+    }
+
+    @media (prefers-reduced-motion: reduce){
+      .preview::after{ animation:none; }
+      .blink{ animation:none; }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="window" role="application" aria-label="RetroNet Blog Window">
+    <div class="titlebar">
+      <div class="left">
+        <span class="badge-dot" aria-hidden="true"></span>
+        <div class="appname">Delarnet</div>
+      </div>
+      <div class="controls" aria-hidden="true">
+        <span class="ctrl"></span><span class="ctrl"></span><span class="ctrl"></span>
+      </div>
+    </div>
+
+    <div class="toolbar">
+      <button class="btn primary" id="btnNewPost" type="button">New Post</button>
+
+      <div class="chip" data-active="true" id="chipAll" role="button" tabindex="0" aria-label="Show all posts">
+        <span class="mini" style="background:#0d56ff"></span> All
+      </div>
+      <div class="chip" data-active="false" id="chipDesign" role="button" tabindex="0" aria-label="Filter design posts">
+        <span class="mini" style="background:#35ff72"></span> Lietuva
+      </div>
+      <div class="chip" data-active="false" id="chipDev" role="button" tabindex="0" aria-label="Filter developer posts">
+        <span class="mini" style="background:#ff4040"></span> pasaulis
+      </div>
+
+      <div class="input" aria-label="Search posts">
+        <label for="search">Paieška</label>
+        <input id="search" type="search" placeholder="Kas ieškos tas ir ras...(vesk raktažodžius)" />
+      </div>
+    </div>
+
+    <div class="content">
+      <aside class="sidebar">
+        <div class="side-header">
+          <span>System Panel</span>
+          <span style="font-size:12px; font-weight:900; opacity:.9;">v1.0</span>
+        </div>
+
+        <div class="side-body">
+          <div class="meter" aria-label="Blog activity meter">
+            <div class="row">
+              <span>Signal</span>
+              <span id="signalText">62%</span>
+            </div>
+            <div class="bar" aria-hidden="true"><span id="signalBar"></span></div>
+          </div>
+
+          <div class="meter">
+            <div class="row">
+              <span>Cache</span>
+              <span id="cacheText">ready</span>
+            </div>
+            <div class="bar" aria-hidden="true"><span style="width:48%; background:linear-gradient(90deg,#1a4fff,#35ff72)"></span></div>
+          </div>
+
+          <button class="btn" type="button" id="btnAbout" style="width:100%; text-align:left;">
+            Help / About
+          </button>
+
+          <div class="meter" style="background:#d1d1d1;">
+            <div class="row">
+              <span>Quick Keys</span>
+              <span class="kbd">Ctrl</span>
+            </div>
+            <div style="font-size:12px; font-weight:800; margin-top:8px; opacity:.95; line-height:1.35;">
+              <div><span class="kbd">F</span> = focus search</div>
+              <div><span class="kbd">N</span> = new post</div>
+              <div><span class="kbd">Esc</span> = close windows</div>
+            </div>
+          </div>
+        </div>
+      </aside>
+
+      <main class="main">
+        <div class="main-header">
+          <div class="crumbs" aria-label="Breadcrumbs">
+            <span class="crumb" id="crumbHome" role="button" tabindex="0">Home</span>
+            <span class="crumb muted" id="crumbBlog" role="button" tabindex="0">Blog</span>
+            <span class="crumb muted" id="crumbArchive" role="button" tabindex="0">Archive</span>
+          </div>
+          <div style="font-weight:900; font-size:12px; opacity:.9;">
+            { <span id="resultsCount">0</span> } results
+          </div>
+        </div>
+
+        <div class="posts" id="posts"></div>
+
+        <div class="pagination">
+          <div class="pagination-info" id="paginationInfo">Page 1 of 1</div>
+          <div class="pagination-controls">
+            <button class="btn page-btn" id="prevPageBtn" type="button">Previous</button>
+            <button class="btn page-btn" id="nextPageBtn" type="button">Next</button>
+          </div>
+        </div>
+
+        <div class="statusbar">
+          <div style="display:flex; gap:10px; align-items:center;">
+            <span class="blink" aria-hidden="true"></span>
+            <span>connected://retroblog.local</span>
+          </div>
+          <div>Sėkmės skaitant.</div>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <div class="modal-backdrop" id="modalBackdrop" role="dialog" aria-modal="true" aria-label="Post modal">
+    <div class="modal">
+      <div class="mhead">
+        <div id="modalTitle" style="font-weight:900; letter-spacing:.2px;">Post Viewer</div>
+        <div class="controls" aria-hidden="true" style="gap:6px;">
+          <span class="ctrl"></span><span class="ctrl"></span><span class="ctrl"></span>
+        </div>
+      </div>
+      <div class="mbody">
+        <div style="font-weight:900; font-size:12px; opacity:.9;" id="modalSub"></div>
+        <div style="border:2px solid rgba(0,0,0,.35); background:#d0d0d0; padding:10px; border-radius:2px;">
+          <div style="font-weight:900; margin-bottom:8px; text-transform:uppercase; font-size:12px; opacity:.85;">
+            Content
+          </div>
+          <div id="modalContent" style="font-size:14px; font-weight:700; line-height:1.5; white-space:pre-wrap;"></div>
+        </div>
+        <div style="font-size:12px; font-weight:900; opacity:.9;">
+          This is a front-end demo window—perfect for swapping your real blog engine later.
+        </div>
+      </div>
+      <div class="actions">
+        <button class="btn" type="button" id="btnCloseModal">Close</button>
+        <button class="btn primary" type="button" id="btnSimulateError" title="Makes it feel 2000s.">Simulate Error</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-backdrop" id="errorBackdrop" role="dialog" aria-modal="true" aria-label="Error modal">
+    <div class="modal" style="width:min(520px,96vw);">
+      <div class="mhead">
+        <div style="font-weight:900;">Error</div>
+        <div class="controls" aria-hidden="true" style="gap:6px;">
+          <span class="ctrl"></span><span class="ctrl"></span><span class="ctrl"></span>
+        </div>
+      </div>
+      <div class="mbody">
+        <div style="border:2px solid rgba(0,0,0,.35); background:#d0d0d0; padding:12px; border-radius:2px;">
+          <div style="font-weight:1000; font-size:14px; margin-bottom:8px;">Fail</div>
+          <div style="font-weight:800; font-size:13px; opacity:.95;">
+            “Connection timed out.”<br/>
+            Please try again.
+          </div>
+        </div>
+      </div>
+      <div class="actions">
+        <button class="btn primary" type="button" id="btnOk">OK</button>
+      </div>
+    </div>
+  </div>
+
+<script>
+    const postsData = [
+      {
+        id: 1,
+        title: "1. Senovės pasaulio konfliktai: Karvedžiai ir mūšiai",
+        date: "2026-06-01",
+        author: "istorija.exe",
+        category: "Antika",
+        tags: ["antika", "karai", "graikai", "roma"],
+        excerpt: "Senovės pasaulyje karai nulėmė valstybių plėtrą, kultūrų maišymąsi ir karo meno raidą. Dideli karvedžiai kūrė imperijas, o mūšiai keitė istoriją.",
+        content: "I. SENOVĖS PASAULIO KONFLIKTAI (Graikų, romėnų ir persų karai)\n\n" +
+                 "PAGRINDINĖ MINTIS:\n" +
+                 "Senovės pasaulyje karai nulėmė valstybių plėtrą, kultūrų maišymąsi ir karo meno raidą. Dideli karvedžiai kūrė imperijas, o mūšiai keitė Europos ir Artimųjų Rytų istoriją.\n\n" +
+                 "KARVEDŽIAI:\n" +
+                 "• Aleksandras Makedonietis\n" +
+                 "  - Užkariavo Persų imperiją.\n" +
+                 "  - Skleidė helenizmą.\n" +
+                 "  - Tobulino falangos taktiką.\n" +
+                 "• Julijus Cezaris\n" +
+                 "  - Užkariavo Galiją.\n" +
+                 "  - Sustiprino Romą.\n" +
+                 "  - Tobulino legionų sistemą.\n" +
+                 "• Hanibalas\n" +
+                 "  - Per Alpes įžygiavo į Italiją.\n" +
+                 "  - Laimėjo Kanų mūšį.\n" +
+                 "  - Garsus karo strategas.\n" +
+                 "• Leonidas I\n" +
+                 "  - Vadovavo spartiečiams Termopiluose.\n" +
+                 "  - Drąsos ir pasiaukojimo simbolis.\n\n" +
+                 "SVARBIAUSI MŪŠIAI:\n" +
+                 "• Maratono mūšis (490 m. pr. Kr.)\n" +
+                 "  - Graikai nugalėjo persus. Sustabdytas Persijos puolimas.\n" +
+                 "• Gaugamelų mūšis (331 m. pr. Kr.)\n" +
+                 "  - Aleksandras nugalėjo Persiją. Žlugo Persų imperija.\n" +
+                 "• Kanų mūšis (216 m. pr. Kr.)\n" +
+                 "  - Hanibalas sutriuškino romėnus. Garsi apsupimo taktika.\n" +
+                 "• Teutoburgo miško mūšis (9 m.)\n" +
+                 "  - Germanai sunaikino Romos legionus. Roma sustabdė plėtrą į Germaniju."
+      },
+      {
+        id: 2,
+        title: "2. Antikos karinės ir kultūrinės sąvokos",
+        date: "2026-06-01",
+        author: "istorija.exe",
+        category: "Antika",
+        tags: ["antika", "graikai", "roma", "terminai"],
+        excerpt: "Svarbiausios senovės pasaulio sąvokos: nuo taktinių rikiuočių, tokių kaip falanga ar legionas, iki kultūrinio helenizmo palikimo bei Limes sistemos.",
+        content: "SĄVOKOS IR TERMINAI:\n\n" +
+                 "• Falanga\n" +
+                 "  - Tanki graikų karių rikiuotė.\n\n" +
+                 "• Hoplitai\n" +
+                 "  - Sunkiai ginkluoti graikų pėstininkai.\n\n" +
+                 "• Legionas\n" +
+                 "  - Pagrindinis Romos kariuomenės vienetas.\n\n" +
+                 "• Helenizmas\n" +
+                 "  - Graikų kultūros plitimas po Aleksandro užkariavimų. Plito graikų kultūra, mokslas ir kalba.\n\n" +
+                 "• „Limes“\n" +
+                 "  - Romos pasienio įtvirtinimai.\n\n" +
+                 "• Fortas\n" +
+                 "  - Įtvirtinta karinė stovykla.\n\n" +
+                 "ISTORINIS PALIKIMAS:\n" +
+                 "• Helenizmas: Sujungė rytų ir vakarų kultūras, išplėtė mokslo žinias.\n" +
+                 "• Romos palikimas: Keliai, fortai, „limes“ sistema bei moderni legionų karo organizacija."
+      },
+      {
+        id: 3,
+        title: "3.1. Ikimoderniųjų laikų konfliktai: sąvokos ir esmė",
+        date: "2026-06-02",
+        author: "diplomatija.io",
+        category: "Ikimodernieji",
+        tags: ["karas", "dinastijos", "religija"],
+        excerpt: "Nuo dinastinių ambicijų iki konfesinių pasirinkimų – kas judino ikimoderniosios Europos geopolitinę ašį?",
+        content: "1. PAGRINDINĖS SĄVOKOS TARPTAUTINIŲ SANTYKIŲ KONTEKSTE:\n" +
+                 "• Dinastinis karas – konfliktas, kurio pagrindinis variklis – valdovų ambicijos, pretenzijos į sostą ar vedybinį paveldėjimą.\n" +
+                 "• Religiniai karai – XVI–XVII a. reiškinys, kilęs dėl Reformacijos. Valdovo konfesinis pasirinkimas tiesiogiai lėmė valstybės užsienio politiką.\n" +
+                 "• Konstitucinė monarchija – valdymo forma, ribojanti monarcho ambicijas įstatymais – žingsnis link modernios valstybės valdymo.\n\n" +
+                 "2. DIDIEJI IKIMODERNIŲJŲ LAIKŲ KARAI:\n" +
+                 "• Šimtametis karas (1337–1453 m.) – prasidėjo kaip Prancūzijos ir Anglijos dinastijų konfliktas, bet paspartino abiejų šalių centralizaciją ir tautinį identitetą.\n" +
+                 "• Trisdešimties metų karas (1618–1648 m.) – prasidėjo kaip Šventosios Romos imperijos religinis konfliktas, bet peraugo į visuotinį karą dėl hegemonijos Europoje."
+      },
+      {
+        id: 4,
+        title: "3.2. Trys asmenybės, pakeitusios tarptautinių santykių eigą",
+        date: "2026-06-03",
+        author: "diplomatija.io",
+        category: "Ikimodernieji",
+        tags: ["asmenybės", "istorija", "politika"],
+        excerpt: "Kaip Žana d’Ark, kardinolas Rišeljė ir Klemensas fon Meternichas perbraižė Europos politinį žemėlapį.",
+        content: "1. ŽANA D’ARK (Jeanne d'Arc):\n" +
+                 "• Šimtamečio karo figūra, transformavusi feodalinį dinastijų karą į prancūzų tautinį išsivadavimo judėjimą. Ji padėjo pamatus modernios tautinės valstybės sampratai.\n\n" +
+                 "2. ARMANAS ŽANAS DE RIŠELJĖ (Kardinolas Richelieu):\n" +
+                 "• Prancūzijos politikos strategas Trisdešimties metų karo metu. Jis sukūrė valstybės intereso (Raison d'État) principą – iškėlė šalies saugumą ir geopolitiką aukščiau už religinį solidarumą.\n\n" +
+                 "3. KLEMENSAS FON METERNICHAS (Klemens von Metternich):\n" +
+                 "• Austrijos kancleris, Vienos kongreso lyderis. Sukūrė Meternicho sistemą, orientuotą į jėgų pusiausvyrą, legitimizmo gynimą ir revoliucinių judėjimų slopinimą Europoje."
+      },
+      {
+        id: 5,
+        title: "3.3. Valstybė kaip subjektas: nuo Vestfalijos iki Vienos",
+        date: "2026-06-04",
+        author: "diplomatija.io",
+        category: "Ikimodernieji",
+        tags: ["vestfalija", "vienos-kongresas", "suverenitetas"],
+        excerpt: "Kaip XVII–XIX a. įvykiai suformavo suverenių valstybių sistemą ir jėgų pusiausvyros taisykles.",
+        content: "1. VESTFALIJOS TAIKA (1648 m.) – MODERNOS SISTEMOS PAMATAS:\n" +
+                 "• Užbaigė Trisdešimties metų karą ir suformavo Vestfalijos sistemą.\n" +
+                 "• Įtvirtino visišką valstybių suverenitetą: jokia išorinė jėga (popiežius, imperatorius) negali kištis į šalies vidaus reikalus.\n" +
+                 "• Įteisino valstybių teisinę lygybę ir atskyrė tarptautinę teisę nuo religijos.\n\n" +
+                 "2. VIENOS KONGRESAS (1814–1815 m.) IR 'EUROPOS KONCERTAS':\n" +
+                 "• Po Napoleono karų permąstyta tarptautinė tvarka, siekiant suvaldyti Prancūzijos hegemoniją.\n" +
+                 "• Įtvirtintas jėgų pusiausvyrą (jėgų balanso) principas – nei viena didžioji valstybė negali dominuoti prieš kitas.\n" +
+                 "• Sukurtas 'Europos koncertas' – reguliarių didžiųjų valstybių diplomatinių susitikimų sistema konfliktams taikiai spręsti."
+      },
+      {
+        id: 6,
+        title: "4. XX a. pirmosios pusės totaliniai karai ir doktrinos",
+        date: "2026-06-03",
+        author: "istorija.exe",
+        category: "Totaliniai Karai",
+        tags: ["pirmasis-pasaulinis", "tautų-sąjunga", "versalis"],
+        excerpt: "Totalinių karų bruožai, Versalio sistema, Tautų apsisprendimo principas ir kolektyvinio saugumo nesėkmė tarpukariu.",
+        content: "1. TOTALINIO KARO SĄVOKA:\n" +
+                 "• Karas, reikalaujantis visiško visuomenės ir ekonomikos mobilizavimo. Trinama riba barat fronto ir užnugario, naudojama masinė propaganda ir naujos technologijos (dujos, tankai, aviacija).\n\n" +
+                 "2. VERSALIO TARPTAUTINĖ SISTEMA (1919 m.):\n" +
+                 "• W. Wilsono 14 punktų programa: Įtvirtintas tautų apsisprendimo principas, skatinęs imperijų žlugimą ir naujų tautinių valstybių (įskaitant Lietuvą) atsiradimą.\n\n" +
+                 "3. KOLEKTYVINIO SAUGUMO DOKTRINA IR TAUTŲ SĄJUNGA:\n" +
+                 "• Įkurta Tautų Sąjunga (1919 m.) su tikslu taikiai spręsti konfliktus.\n" +
+                 "• Nesėkmės priežastys: JAV neprisijungė; trūko realių karinių svertų agresoriams tramdyti; nesugebėjo sustabdyti Japonijos, Italijos ir Vokietijos agresijos, kas tiesiogiai atvėrė kelią Antrajam pasauliniam karui."
+      },
+      {
+        id: 7,
+        title: "4.1 Totalinis karas ir idealizmo žlugimas tarpukariu",
+        date: "2026-06-09",
+        author: "istorija.exe",
+        category: "Totaliniai Karai",
+        tags: ["totalinis-karas", "idealizmas", "sąvokos"],
+        excerpt: "Kas yra totalinis karas ir kodėl Vudro Vilsono idealistinė taikos vizija kapituliavo prieš realiąją politiką?",
+        content: "1. TOTALINIO KARO IR MOBILIZACIJOS SĄVOKOS:\n" +
+                 "• Totalinis karas – konfliktas, reikalaujantis visiško visuomenės ir ekonomikos mobilizavimo. Trinama riba tarp fronto ir civilių užnugario.\n" +
+                 "• Totalinė mobilizacija – visos pramonės, žiniasklaidos (propagandos) ir išteklių pajungimas pergalės tikslui.\n" +
+                 "• Hindenburgo programa (1916 m.) – Vokietijos totalinės mobilizacijos planas Pirmajame pasauliniame kare, siekiant padvigubinti ginkluotę priverstiniu darbu.\n" +
+                 "• Pozicinis karas – kariavimas stabiliuose apkasų tinkluose (Pirmasis pasaulinis karas), o Manevrinis karas – greitas judėjimas ir technikos (tankų, aviacijos) apsupties taktika.\n" +
+                 "• Masinio naikinimo ginklas – cheminis ginklas (I PK) ir atominė bomba (II PK), galintys masiškai naikinti gyvybę.\n\n" +
+                 "2. VILSONIŠKASIS IDEALIZMAS PRIEŠ REALPOLITIK:\n" +
+                 "• Vilsoniškasis idealizmas – JAV prezidento V. Vilsono vizija (14 punktų), propagavusi tautų apsisprendimo teisę ir kolektyvinį saugumą.\n" +
+                 "• Susidūrimas su Realpolitik – Europos valstybės (JK, Prancūzija) siekė saugumo ir Vokietijos nubaudimo, o ne moralinės taikos.\n" +
+                 "• Tautų Sąjungos nesėkmė – įkurta 1919 m., tačiau neturėjo karinės jėgos ir nesugebėjo sustabdyti agresorių (Japonijos, Italijos, Vokietijos), kas lėmė Versalio sistemos žlugimą."
+      },
+      {
+        id: 13,
+        title: "4,2 Keturi lyderiai, nulėmę XX a. pirmosios pusės katastrofas",
+        date: "2026-06-10",
+        author: "diplomatija.io",
+        category: "Totaliniai Karai",
+        tags: ["lyderiai", "diplomatija", "istorija"],
+        excerpt: "Vilsonas, Hitleris, Stalinas, Čerčilis – asmenybės, formavusios karo strategijas ir braižiusios naujas pasaulio sienas.",
+        content: "XX A. PIRMOSIOS PUSĖS ASMENYBIŲ REIKŠMĖ:\n\n" +
+                 "• Vudras Vilsonas (Woodrow Wilson):\n" +
+                 "  - Idealizmo pradininkas. Jo tautų apsisprendimo principas sugriovė senąsias imperijas ir leido gimti naujoms valstybėms (taip pat ir Lietuvai).\n\n" +
+                 "• Adolfas Hitleris (Adolf Hitler):\n" +
+                 "  - Totalitarinis Vokietijos diktatorius. Pasinaudojo Versalio sistemos spragomis, vykdė agresyvią plėtrą (pvz., 1938 m. Austrijos anšliusas), sulaužė tarptautinę teisę ir organizavy genocidą (Holokaustą).\n\n" +
+                 "• Josifas Stalinas (Joseph Stalin):\n" +
+                 "  - Totalitarinis SSRS lyderis. 1939 m. sudarė paktą su Vokietija, o vėliau, tapęs sąjungininku, Jaltos ir Potsdamo konferencijose užsitikrino Rytų Europos kontrolę.\n\n" +
+                 "• Vinstonas Čerčilis (Winston Churchill):\n" +
+                 "  - Didžiosios Britanijos premjeras, bekompromisio pasipriešinimo naciams simbolis. Kartu su JAV pasirašė Atlanto chartiją (1941 m.), padėjusią pamatą JT, ir numatė pokarinį pasaulio skilimą."
+      },
+      {
+        id: 14,
+        title: "4.3 Nuo Verdeno iki Potsdamo: mūšiai ir paktų diplomatija",
+        date: "2026-06-11",
+        author: "global.net",
+        category: "Totaliniai Karai",
+        tags: ["mūšiai", "sutartys", "potsdamas", "versalis"],
+        excerpt: "Svarbiausi kariniai lūžiai ir diplomatiniai susitarimai, pakeitę tarptautinę tvarką ir Europos žemėlapį.",
+        content: "1. PIRMASIS PASAULINIS KARAS IR JOS PADARINIAI:\n" +
+                 "• Verdeno mūšis (1916 m.) – pozicinio karo ir pramoninio naikinimo ('mėsamalės') simbolis tarp Prancūzijos ir Vokietijos.\n" +
+                 "• Versalio taika (1919 m.) – sutartis, nubaudusi Vokietiją teritoriniais praradimais ir reparacijomis, sukėlusi vokiečių revanšizmą.\n\n" +
+                 "2. KELIAS Į KATASROFĄ IR ANTRASIS PASAULINIS KARAS:\n" +
+                 "• Miuncheno susitarimas (1938 m.) – nuolaidžiavimo politikos pikas, leidęs Hitleriui užimti Sudetų kraštą.\n" +
+                 "• Molotovo-Ribentropo paktas (1939 m. rugpjūčio 23 d.) – nacių ir SSRS nepuolimo sutartis. Slaptieji protokolai pasidalijo Rytų Europą ir pradėjo karą.\n" +
+                 "• Lendlizas (Lend-Lease) – JAV programa, rėmusi sąjungininkus (JK, SSRS) ginklais ir maistu karo metu.\n" +
+                 "• Stalingrado mūšis (1942–1943 m.) – strateginis karo lūžis, po kurio Vokietija Rytų fronte tik traukėsi.\n" +
+                 "• Normandijos operacija (1944 m.) – sąjungininkų išsilaipinimas Prancūzijoje, atvėręs antrąjii frontą Europoje.\n\n" +
+                 "3. POKARINIS PASAULIO PERTVARKYMAS:\n" +
+                 "• Potsdamo konferencija (1945 m.) – nustatė pokarinės Europos ir padalytos Vokietijos kontūrus, davusius pradžią Šaltajam karui.\n" +
+                 "• Karo pasekmės – milijonai karo pabėgėlių ir tarptautinėje teisėje įtvirtinta genocido sąvoka."
+      },
+      {
+        id: 8,
+        title: "6. Iššūkiai valstybingumui ir TS XX a. pab. – XXI a.",
+        date: "2026-06-05",
+        author: "global.net",
+        category: "pasaulis",
+        tags: ["globalizacija", "terorizmas", "vienpolis-pasaulis"],
+        excerpt: "Naujoji tarptautinė tvarka po SSRS žlugimo, globalizacijos poveikis suverenitetui ir šiuolaikinės asimetrinės grėsmės.",
+        content: "1. TARPTAUTINES SISTEMOS TRANSFORMACIJA:\n" +
+                 "• Perėjimas iš dvipolio į trumpalaikį vienpolį (JAV dominavimas) ir dabartinį daugiapolį pasaulį (iškilus Kinijai, Rusijos revanšizmui).\n\n" +
+                 "2. GLOBALIZACIJOS POVEIKIS VALSTYBEI:\n" +
+                 "• Tradicinio valstybės suvereniteto silpnėjimas dėl viršvalstybinių organizacijų (ES, JT, TVF) ir transnacionalinių korporacijų įtakos.\n\n" +
+                 "3. ŠIUOLAIKINIAI IŠŠŪKIAI IR GRĖSMĖS:\n" +
+                 "• Tarptautinis terorizmas (2001 m. rugsėjo 11 d. atakos, asimetrinis kariavimas).\n" +
+                 "• Regioniniai konfliktai ir hibridiniai karai (kiberatakos, dezinformacija).\n" +
+                 "• Klimato kaita, masinė migracija, branduolinio ginklo platinimo grėsmė.\n" +
+                 "• Tarptautinės teisės pažeidimai ir autoritarinių režimų bandymai jėga perbraižyti valstybių sienas Europoje."
+      },
+      {
+        id: 18,
+        title: "6.1. Naujoji pasaulio tvarka, posovietinė erdvė ir esminės sąvokos",
+        date: "2026-06-15",
+        author: "global.net",
+        category: "pasaulis",
+        tags: ["posovietinė-erdvė", "sąvokos", "geopolitika"],
+        excerpt: "Nuo SSRS subyrėjimo iki vienpolio pasaulio pabaigos – kaip transformavosi tarptautinė tvarka ir kokie nauji terminai apibrėžia XXI a. saugumą?",
+        content: "1. NAUJOJI PASAULIO TVARKA IR GALIDŲ BALANSAS:\n" +
+                 "• Po SSRS žlugimo prasidėjo JAV dominavimas (vienpolis pasaulis). Tačiau XXI a. šią tvarką transformuoja Kinijos ekonominis bei karinis iškilimas ir Rusijos revanšizmas, vedantis link daugiapolio pasaulio.\n\n" +
+                 "2. GEOPOLITINIŲ SĄVOKŲ ŽODYNĖLIS:\n" +
+                 "• Posovietinė erdvė – nepriklausomos valstybės, susikūrusios buvusioje SSRS teritorijoje (Baltijos šalys, Ukraina, Kaukazas, Centrinė Azija).\n" +
+                 "• Belovežo susitarimas (1991 m. gruodis) – sutartis, kurią pasirašė Rusijos, Ukrainos ir Baltarusijos vadovai, oficialiai paskelbdami SSRS žlugimą ir įkurdami NVS.\n" +
+                 "• Užšaldytas konfliktas – situacija, kai aktyvūs kariniai veiksmai yra nutrūkę (pasirašytos paliaubos), tačiau politinis sprendimas nepasiektas, o teritorijos statusas lieka neaiškus (pvz., Padniestrė, Padniestrė, Kalnų Karabachas tarpukariu).\n" +
+                 "• Separatistai – asmenys ar grupės, siekiantys atskirti dalį teritorijos nuo esamos valstybės ir sukurti naują šalį arba prisijungti prie kitos.\n" +
+                 "• Etninis valymas – smurtinis, sistemingas tam tikros etninės ar religinės grupės pašalinimas (trėmimai, žudymai) iš konkrečios teritorijos, siekiant ją padaryti „homogenišką“.\n" +
+                 "• Srebrenicos žudynės (1995 m.) – Bosnijos karo metu serbų pajėgų įvykdytas daugiau nei 8000 musulmonų vyrų ir berniukų genocidas, didžiausios masinės žudynės Europoje po II PK."
+      },
+      {
+        id: 19,
+        title: "6.2. Lyderiai, formavę pasaulį nuo Šaltojo karo pabaigos iki šiandien",
+        date: "2026-06-16",
+        author: "diplomatija.io",
+        category: "pasaulis",
+        tags: ["lyderiai", "politika", "moderni-istorija"],
+        excerpt: "Gorbačiovo reformos, Putino agresija, Si Dzinpingo ambicijos ir Zelenskio lyderystė – asmenybės, keitusios XXI a. valstybingumo sampratą.",
+        content: "XX A. PABAIGOS – XXI A. LYDERIŲ REIKŠMĖ:\n\n" +
+                 "• Michailas Gorbačiovas (Mikhail Gorbachev):\n" +
+                 "  - Paskutinis SSRS vadovas. Jo reformos (Pertvarka ir Viešumas) netyčia pagreitino sovietinės imperijos ir Rytų bloko subyrėjimą bei Šaltojo karo pabaigą.\n\n" +
+                 "• Helmutas Kolis (Helmut Kohl):\n" +
+                 "  - Vokietijos kancleris, „Susivienijimo tėvas“, sugebėjęs diplomatiškai užsitikrinti JAV, SSRS ir Europos partnerių pritarimą Vokietijos vientisumo atkūrimui 1990 m.\n\n" +
+                 "• Džordžas Bušas vyresnysis (George H. W. Bush):\n" +
+                 "  - JAV prezidentas SSRS žlugimo metu. Sėkmingai suvaldė Persijos įlankos karą (1990–1991 m.), išlaisvinant Kuveitą, ir nubrėžė JAV vadovaujamos „Naujosios pasaulio tvarkos“ gaires.\n\n" +
+                 "• Borisas Jelcinas (Boris Yeltsin):\n" +
+                 "  - Pirmasis demokratinės Rusijos Federacijos prezidentas. Pasirašė Belovežo susitarimą, tačiau jo valdymą temdė ekonominis chaosas ir Pirmasis Čečėnijos karas.\n\n" +
+                 "• Džocharas Dudajevas (Dzhokhar Dudayev):\n" +
+                 "  - Čečėnijos nepriklausomybės judėjimo lyderis, pirmasis Čečėnijos Ičkerijos Respublikos prezidentas, vadovavęs čečėnų pasipriešinimui prieš Rusijos kariuomenę iki savo žūties.\n\n" +
+                 "• Sadamas Huseinas (Saddam Hussein):\n" +
+                 "  - Irako diktatorius, kurio invazija į Kuveitą išprovokavo Persijos įlankos karą, o 2003 m. JAV koalicijos pajėgų jis buvo nuverstas.\n\n" +
+                 "• Vladimiras Putinas (Vladimir Putin):\n" +
+                 "  - Rusijos vadovas, pasukęs šalį į autoritarizmą ir revanšizmą. Pradėjo Antrąjį Čečėnijos karą, užpuolė Sakartvelą (2008 m.), o nuo 2014 m. vykdo agresiją prieš Ukrainą, griaudamas tarptautinio saugumo architektūrą.\n\n" +
+                 "• Si Dzinpingas (Xi Jinping):\n" +
+                 "  - Kinijos lyderis, centralizavęs valdžią ir vykdantis ambicingą globalią politiką („Vieno diržo, vieno kelio“ iniciatyva), siekiant paversti Kiniją dominuojančia pasaulio supergalia.\n\n" +
+                 "• Volodimyras Zelenskis (Volodymyr Zelenskyy):\n" +
+                 "  - Ukrainos prezidentas, tapęs globaliu pasipriešinimo autoritarinei Rusijos agresijai ir demokratinių vertybių gynimo simboliu po 2022 m. plataus masto invazijos."
+      },
+      {
+        id: 20,
+        title: "6.3. Karai pokomunistinėje erdvėje ir pasaulinis terorizmas",
+        date: "2026-06-17",
+        author: "istorija.exe",
+        category: "pasaulis",
+        tags: ["terorizmas", "karas-ukrainoje", "vokietija", "konfliktai"],
+        excerpt: "Vokietijos susivienijimas, kruvini etniniai konfliktai Bosnijoje bei Čečėnijoje, Rugsėjo 11-osios sukrėtimas ir Rusijos karas prieš Ukrainą.",
+        content: "1. TARPTAUTINĖS TVARKOS TRANSFORMACIJA IR REIKŠMINGI ĮVYKIAI:\n" +
+                 "• Vokietijos susivienijimas (1990 m.) – Berlyno sienos griūties išdava. VDR buvo prijungta prie VFR, simbolizuojant Šaltojo karo padarinių likvidavimą Europoje.\n" +
+                 "• Persijos įlankos karas (1990–1991 m.) – JAV vadovaujamos tarptautinės koalicijos operacija, sėkmingai išstūmusi Kuveitą okupavusią Irako kariuomenę. Parodė JAV karinį pranašumą.\n\n" +
+                 "2. TERITORINIAI IR ETNINIAI KONFLIKTAI POKOMUNISTINĖJE ERDVĖJE:\n" +
+                 "• Bosnijos karas (1992–1995 m.) – Jugoslavijos irėjimo metu kilęs itin kruvinas etninis konfliktas tarp bosnių, serbų ir kroatų. Užbaigtas Deitono susitarimais tik įsikišus NATO.\n" +
+                 "• Čečėnijos karai (Pirmasis: 1994–1996 m., Antrasis: 1999–2009 m.) – Čečėnijos bandymas išsikovoti nepriklausomybę nuo Rusijos. Konfliktai pasižymėjo masiniu civilių naikinimu, Grozno sugriovimu ir pasibaigė regiono reokupacija.\n\n" +
+                 "3. PASAULINIS TERORIZMAS IR RELIGINIS FUNDAMENTALIZMAS:\n" +
+                 "• Religinis fundamentalizmas – radikalus grįžimas prie griežtų religinių šaknų, dažnai naudojamas kaip politinis ginklas.\n" +
+                 "• Rugsėjo 11-osios teroristų išpuoliai JAV (2001 m.) – radikalios islamistų grupuotės „Al-Qaeda“ įvykdytos atakos, sugriovusios Pasaulio prekybos centro dvynius. Tai visiškai pakeitė globalią saugumo darbotvarkę.\n" +
+                 "• Afganistano karas (2001–2021 m.) – JAV ir NATO atsakas į Rugsėjo 11-ąją, skirtas sunaikinti „Al-Qaeda“ ir ją rėmusį Talibano režimą.\n" +
+                 "• Islamo valstybė (ISIS) – vėliau Artimuosiuose Rytuose iškilusi žiauri teroristinė organizacija, bandžiusi jėga sukurti kalifatą Irako ir Sirijos teritorijose.\n\n" +
+                 "4. RUSIJOS AGRESIJA IR KARAS SU UKRAINA (nuo 2014 m.):\n" +
+                 "• Didžiausias tarpvalstybinis karas Europoje po II PK. Prasidėjo 2014 m. neteisėta Krymo aneksija ir hibridiniu karu Donbase, o 2022 m. vasario 24 d. peraugo į plataus masto Rusijos Federacijos invaziją.\n" +
+                 "• Šis karas galutinai sužlugdė po Šaltojo karo galiojusią saugumo sistemą, privertė Vakarus suvienyti jėgas teikiant karinę bei finansinę paramą Ukrainai ir paskatino NATO aljansą stiprinti savo rytinį flangą."
+      },
+      {
+        id: 9,
+        title: "7. LDK karyba ir diplomatija XIII–XVIII a.",
+        date: "2026-06-06",
+        author: "ldk.history",
+        category: "Lietuva",
+        tags: ["ldk", "karai", "diplomatija", "unijos"],
+        excerpt: "Lietuvos Didžiosios Kunigaikštystės užsienio politikos kryptys, gynyba nuo Vokiečių ordino, plėtra į Rytus ir unijų sistema.",
+        content: "1. LIETUVOS VALSTYBĖS SUSIKŪRIMAS IR DIPLOMATIJA:\n" +
+                 "• Mindaugo diplomatija: Krikštas (1251 m.) ir karūnacija (1253 m.) leido integruotis į krikščioniškąją Europos politinę sistemą.\n\n" +
+                 "2. KARAS SU VOKIEČIŲ ORDINU (XIII–XV a.):\n" +
+                 "• Gynybinis karas dėl išlikimo. Kulminacija: Žalgirio mūšis (1410 m.). Melno taika (1422 m.) galutinai užfiksavo vakarines sienas.\n\n" +
+                 "3. PLĖTRA Į RYTUS IR KONFLIKTAI SU MASKOVA:\n" +
+                 "• LDK vykdė 'rusų žemių rinkimo' politiką. Nuo XV a. pab. prasidėjo ilgi ir sekinantys karai su stiprėjančia Maskvos didžiąja kunigaikštyste.\n\n" +
+                 "4. DIPLOMATINĖ TRANSFORMACOJA PER UNIJAS:\n" +
+                 "• Krėvos unija (1385 m.) – dinastinė sąjunga su Lenkija.\n" +
+                 "• Liublino unija (1569 m.) – LDK ir Lenkija susijungė į federacinę valstybę – Abiejų Tautų Respubliką (ATR)."
+      },
+      {
+        id: 21,
+        title: "7.1. Pagoniškasis pragmatiškumas, Kryžiaus žygiai ir LDK sąvokos",
+        date: "2026-06-18",
+        author: "ldk.history",
+        category: "Lietuva",
+        tags: ["pagonys", "sąvokos", "diplomatija"],
+        excerpt: "Kaip ankstyvosios LDK valdovai balansavo tarp santuokų, krikšto pažadų ir karo lauko, siekdami išsaugoti valstybę?",
+        content: "1. VALDOVŲ POLITIKA IR PAGONIŠKASIS PRAGMATIŠKUMAS:\n" +
+                 "• Lietuvos valdovai (Mindaugas, Gediminas, Kęstutis) naudojo lanksčią taktiką: manipuliavo krikšto pažadais, kad laimėtų laiko, sudarydavo dinastines santuokas tiek su krikščioniškais Vakarų (Lenkija), tiek su Rytų (Rusios kunigaikštystės) valdovais, o deryboms žlugus – problemą spręsdavo mūšio lauke.\n\n" +
+                 "2. LDK KARYBOS IR DIPLOMATIJOS SĄVOKOS:\n" +
+                 "• Kryžiaus žygiai – Vakarų Europos riterių (Vokiečių ir Livonijos ordinų) karinės ekspedicijos į pagoniškąją Lietuvą, vykusios XIII–XIV a. po religine vėliava, tačiau siekusios teritorinių užkariavimų.\n" +
+                 "• Bajorų pašauktinė kariuomenė – feodalinė kariuomenės sistema, kai kiekvienas bajoras, mainais už turimą žemę ir privilegijas, karo atveju privalėjo pats apsiginkluoti ir atvykti į valdovo renkamą kariuomenę.\n" +
+                 "• Etmonas – vyriausiasis kariuomenės vadas LDK ir ATR. Didysis etmonas vadovavo visai kariuomenei, o lauko etmonas buvo jo pavaduotojas, veikęs tiesiogiai mūšio lauke.\n" +
+                 "• Livonija – istorinis regionas dabartinėje Latvijoje ir Estijoje, kurį valdė Livonijos ordinas. Dėl šios strategiškai svarbios teritorijos ir priėjimo prie Baltijos jūros LDK kariavo ne vieną šimtmetį.\n" +
+                 "• Tvanas (1655–1660 m.) – ATR istorinis laikotarpis, kai valstybę vienu metu užplūdo švedų ir rusų kariuomenės, sukėlusios visišką politinį, ekonominį ir demografinį kolapsą.\n" +
+                 "• Sidabrinė – LDK karo mokestis, kurį mokėdavo valstiečiai, skirtas samdomajai kariuomenei išlaikyti, kai bajorų pašauktinė kariuomenė tapo nebeefektyvi."
+      },
+      {
+        id: 22,
+        title: "7.2. Valstybės architektai: Mindaugo diplomatija ir Vytauto galybė",
+        date: "2026-06-19",
+        author: "ldk.history",
+        category: "Lietuva",
+        tags: ["valdovai", "vytautas", "mindaugas", "karvedžiai"],
+        excerpt: "Nuo pirmojo karaliaus iki didžiųjų ATR karvedžių – asmenybės, kurios kalbėjo ginklų ir tarptautinių sutarčių kalba.",
+        content: "LDK VALDOVŲ IR KARVEDŽIŲ REIKŠMĖ:\n\n" +
+                 "• Mindaugas – valstybės vienytojas. Pirmasis panaudojo pagonišką pragmatiškumą: priėmė krikštą ir gavo karūną (1253 m.), taip teisiškai integruodamas Lietuvą į Europos monarchijų sistemą.\n" +
+                 "• Gediminas – diplomatijos meistras. Jo laiškai (XIV a.) Vakarų Europai demonstravo pagonišką toleranciją ir kvietė pirklius bei amatininkus, kartu skaldant kryžiuočių propagandinį įvaizdį.\n" +
+                 "• Algirdas ir Kęstutis – sėkmingas valdovų diarchijos (dvivaldystės) pavyzdys. Kęstutis gynė vakarines sienas nuo kryžiuočių, o Algirdas vykdė masinę ekspansiją į Rytus, prijungdamas rusų žemes.\n" +
+                 "• Vytautas Didysis – LDK galybės viršūnė. Kartu su Jogaila sutriuškino Vokiečių ordiną, pasirašė Melno taiką, o Lucko suvažiavime (1429 m.) pademonstravo neįtikėtiną LDK tarptautinį autoritetą.\n" +
+                 "• Kazimieras Jogailaitis – užtikrino ilgalaikį stabilumą ir dinastinius ryšius su Lenkija, stiprino bajorų privilegijas, kurios vėliau pakeitė kariuomenės struktūrą.\n" +
+                 "• Steponas Batoras – vienas geriausių ATR karvedžių. Livonijos karo metu modernizavo kariuomenę (įkūrė vaivadų pulkus) ir sėkmingais žygiais atrėmė Maskvos grėsmę.\n" +
+                 "• Jonas Karolis Chodkevičius – LDK didysis etmonas, genialus taktikas, Kircholmo mūšyje (1605 m.) su keliskart mažesne kariuomene sutriuškinęs švedus.\n" +
+                 "• Zigmantas ir Jonas Kazimieras Vazai – dinastinių ambicijų valdovai. Jų pretenzijos į Švedijos sostą įvėlė ATR į sekinančius karus su Švedija, atvedusius iki Kėdainių unijos ir Tvano."
+      },
+      {
+        id: 23,
+        title: "7.3. Nuo Žalgirio triumfo iki valstybės padalijimų tragedijos",
+        date: "2026-06-20",
+        author: "istorija.exe",
+        category: "Lietuva",
+        tags: ["mūšiai", "sutartys", "padalijimai", "tvanas"],
+        excerpt: "Svarbiausi įvykiai ir dokumentai: kaip LDK išsprendė kryžiuočių problemą, bet vėliau pralaimėjo Švedijos ir Rusijos faktoriui.",
+        content: "1. VAKARŲ GRĖSMĖS LIKVIDAVIMAS:\n" +
+                 "• Žalgirio mūšis (1410 m.) – jungtinė Lietuvos ir Lenkijos kariuomenė visiškai palaužė Vokiečių ordino karinę galią.\n" +
+                 "• Melno taika (1422 m.) – sutartis, kuria ordinas visam laikui atsisakė pretenzijų į Žemaitiją, užfiksavusi vakarinę Lietuvos sieną, kuri nepakito iki XX a.\n\n" +
+                 "2. ŠVEDIJOS IR RUSIJOS FAKTORIAUS IŠKILIMAS:\n" +
+                 "• Livonijos karas (XVI a.) – kilęs dėl Livonijos žlugimo ir Rusijos (Ivano Rūsčiojo) noro veržtis prie Baltijos jūros. Karas privertė LDK pasirašyti Liublino uniją.\n" +
+                 "• Kėdainių unija (1655 m.) – Radvilų pasirašyta sutartis, kuria buvo nutraukta unija su Lenkija ir pasirašyta nauja sąjunga su Švedija, bandant gelbėti LDK nuo rusų okupacijos Tvano metu.\n" +
+                 "• Šiaurės karas (XVIII a. pr.) – švedų ir rusų kovos ATR teritorijoje. Karas visiškai nualino šalį, maras išguldė gyventojus, o Rusija (Petras I) įgijo lemiamą įtaką ATR vidaus politikoje.\n\n" +
+                 "3. VALSTYBĖS ŽLUGIMAS IR PADALIJIMAI:\n" +
+                 "• XVIII a. ATR pasižymėjo visišku kariniu silpnumu (bajorai priešinosi mokesčiams kariuomenei) ir anarchija (Liberum veto teisė žlugdė seimus). Tuo pasinaudojo kaimyninės absolutinės imperijos.\n" +
+                 "• ATR padalijimai – Rusija, Prūsija ir Austrija jėga pasidalijo ir sunaikino valstybę:\n" +
+                 "  - I padalijimas: 1772 m.\n" +
+                 "  - II padalijimas: 1793 m. (Austrija nedalyvavo).\n" +
+                 "  - III padalijimas: 1795 m. (Lietuvos valstybingumas buvo galutinai panaikintas daugiau nei šimtmečiui)."
+      },
+      {
+        id: 10,
+        title: "8. Lietuvos valstybės sugrįžimas ir diplomatiniai sukrėtimai",
+        date: "2026-06-07",
+        author: "istorija.exe",
+        category: "Lietuva",
+        tags: ["1918", "nepriklausomybe", "ultimatumai", "smetona"],
+        excerpt: "1918 m. nepriklausomybės paskelbimas, tarptautinis pripažinimas, Vilniaus bei Klaipėdos problemos ir 1939-1940 m. katastrofa.",
+        content: "1. VALSTYBĖS ATKŪRIMAS IR TARPTAUTIMIT PRIPAŽINIMAS:\n" +
+                 "• 1918 m. Vasario 16 d. aktas. Svarbiausias tikslas – pripažinimas de jure (gautas 1921–1922 m.) ir priėmimas į Tautų Sąjungą.\n" +
+                 "• 1920 m. taikos sutartis su Sovietų Rusija – Rusija pripažino Vilnių Lietuvai.\n\n" +
+                 "2. GEOPOLITINĖS KRIZĖS TARPUKARIU:\n" +
+                 "• Vilniaus klausimas: L. Želigovskio maištas (1920 m.) ir Lenkijos įvykdyta Vilniaus krašto aneksija.\n" +
+                 "• Klaipėdos kraštas: 1923 m. sukilimas, prijungęs kraštą prie Lietuvos.\n\n" +
+                 "3. TARPTAUTINIAI ULTIMATUMAI IR VALSTYBĖS ŽLUGIMAS (1938–1940 m.):\n" +
+                 "• 1938 m. Lenkijos ultimatas (diplomatiniai santykiai). 1939 m. Vokietijos ultimatas (Klaipėdos krašto praradimas).\n" +
+                 "• 1939 m. Molotovo-Ribentropo paktas paskirstė įtakos sferas.\n" +
+                 "• 1940 m. birželio 15 d. SSRS okupacija: valstybė buvo aneksuota ir sovietizuota."
+      },
+      {
+        id: 24,
+        title: "8.1. Lietuvos sugrįžimas: Pripažinimo drama ir pagrindinės sąvokos",
+        date: "2026-06-21",
+        author: "istorija.exe",
+        category: "Lietuva",
+        tags: ["pripažinimas", "sąvokos", "diplomatija"],
+        excerpt: "Kaip po Vasario 16-osios akto Lietuva skynėsi kelią į tarptautinį pripažinimą ir su kokiomis teisinėmis bei geopolitinėmis sąvokomis susidūrė?",
+        content: "1. PARYŽIAUS TAIKOS KONFERENCIJA IR TARPTAUTINIS PRIPAŽINIMAS:\n" +
+                 "• 1919 m. Paryžiaus taikos konferencijoje Lietuvos delegacija siekė nepriklausomybės pripažinimo ir istorinių sienų, tačiau Vakarų valstybės (ypač Prancūzija) delsė tai padaryti. Vakarai tikėjosi atkurti vieningą antibolševikinę Rusiją arba rėmė stiprios Lenkijos (kaip atsvaros Vokietijai) idėją, kuriai Lietuva turėjo priklausyti federaciniais pagrindais.\n\n" +
+                 "2. DIPLOMATINIŲ SĄVOKŲ ŽODYNĖLIS:\n" +
+                 "• Tarptautinis pripažinimas – oficialus naujos valstybės suvereniteto pripažinimas iš kitų šalių pusės. Gali būti de facto (faktinis, laikinas valdžios pripažinimas) ir de jure (visiškas, galutinis, teisiškai įforminantis pilnaverčius diplomatinius santykius).\n" +
+                 "• Ambasadorių konferencija – didžiųjų Vakarų valstybių (JK, Prancūzijos, Italijos, Japonijos) vykdomasis organas po Pirmojo pasaulinio karo, sprendęs Versalio sutarties vykdymo ir ginčytinų sienų klausimus (pvz., dėl Vilniaus ir Klaipėdos).\n" +
+                 "• Želigovskio maišto (1920 m.) – Lenkijos generolo L. Želigovskio inscenizuotas, bet slapta J. Pilsudskio palaimintas nepaklusnumas, kurio metu buvo sulaužyta Suvalkų sutartis ir okupuotas Vilnius bei jo kraštas, įkuriant marionetinę „Vidurio Lietuvą“.\n" +
+                 "• Vyriausiasis Mažosios Lietuvos gelbėjimo komitetas – 1922 m. pabaigoje įkurta politinė organizacija, kuri formaliai vadovavo Klaipėdos sukilimui, paskelbė Tilžės akto deklaraciją ir prašė prijungti kraštą prie Lietuvos.\n" +
+                 "• Neutralitetas – valstybės teisinė pozicija nesikišti į karus, nedalyvauti kariniuose aljansuose. Lietuva tarpukario pabaigoje desperatiškai bandė skelbti neutralitetą, tačiau geopolitinė padėtis neleido jo išlaikyti.\n" +
+                 "• Ultimatumas – kategoriškas vienos valstybės reikalavimas kitai valstybei, kurio neįvykdžius per nurodytą laiką, grasinama imtis griežtų priemonių (karinės jėgos ar ekonominių sankcijų)."
+      },
+      {
+        id: 25,
+        title: "8.2. Užsienio politikos architektai: Galvanauskas, Voldemaras, Urbšys",
+        date: "2026-06-22",
+        author: "diplomatija.io",
+        category: "Lietuva",
+        tags: ["asmenybės", "diplomatai", "tarpukaris"],
+        excerpt: "Trys asmenybės – trys skirtingi Lietuvos užsienio politikos etapai: nuo drąsių Klaipėdos operacijų iki tragiškų 1939–1940 m. pasirašymų.",
+        content: "TARPUKARIO LIETUVOS DIPLOMATIJOS LYDERIAI:\n\n" +
+                 "• Ernestas Galvanauskas:\n" +
+                 "  - Lietuvos premjeras ir užsienio reikalų ministras, laikomas vienu geriausių tarpukario strategų. Jis suorganizavo ir politiškai pridengė 1923 m. Klaipėdos sukilimą, paversdamas jį vietinių gyventojų valios išraiška, ir pasiekė didžiausią tarpukario Lietuvos diplomatinę pergalę.\n\n" +
+                 "• Augustinas Voldemaras:\n" +
+                 "  - Pirmasis Lietuvos užsienio reikalų ministras, vėliau – autoritarinio režimo premjeras (1926–1929 m.). Pasižymėjo radikalia, bekompromise ir agresyvia užsienio politika. Jis kategoriškai atmetė bet kokius kompromisus su Lenkija dėl Vilniaus klausimo, teigdamas, kad tarp šalių teisiškai egzistuoja karo stovėsenos būklė.\n\n" +
+                 "• Juozas Urbšys:\n" +
+                 "  - Paskutinis nepriklausomos Lietuvos užsienio reikalų ministras (nuo 1938 m.). Jam teko tragiška lemtis vadovauti diplomatijai didžiausių krizių metais. Jis tiesiogiai priėmė Vokietijos ultimatumą dėl Klaipėdos ir SSRS reikalavimus dėl įgulų įvedimo, bandydamas diplomatinėmis nuolaidomis iki paskutinės akimirkos išsaugoti formalų šalies valstybingumą."
+      },
+      {
+        id: 26,
+        title: "8.3. Geopolitinės sūpynės: Nuo Klaipėdos triumfo iki 1939 m. katastrofos",
+        date: "2026-06-23",
+        author: "istorija.exe",
+        category: "Lietuva",
+        tags: ["sutartys", "klaipėda", "ultimatumai", "vilnius"],
+        excerpt: "Svarbiausi įvykiai: kaip Kauno-Varšuvos konfliktas privertė Lietuvą ieškoti Berlyno ir Maskvos paramos, kol galiausiai šie milžinai šalį pasidalijo.",
+        content: "1. TARPTAUTINIO INTEGRUOTUMO PRADŽIA IR VILNIAUS TRAUMA:\n" +
+                 "• Tilžės Aktas (1918 m.) – deklaracija, kuria Mažosios Lietuvos lietuvininkai pareikalavo atskirti Mažąją Lietuvą nuo Prūsijos ir sujungti su Didžiąja Lietuva.\n" +
+                 "• Lietuvos–Sovietų Rusijos taikos sutartis (1920 m. liepa) – pirmoji didelė diplomatinė pergalė. Rusija pirmoji pripažino Lietuvos nepriklausomybę de jure ir jos teises į Vilnių mainais į Lietuvos neutralitetą kare su Lenkija.\n" +
+                 "• Priėmimas į Tautų Sąjungą (1921 m.) – galutinis Lietuvos, kaip pilnavertės valstybės, tarptautinis pripažinimas de jure pasaulio bendruomenėje.\n" +
+                 "• Kauno–Varšuvos konfliktas: praradusi Vilnių, Lietuva atsisakė užmegzti bet kokius santykius su Lenkija. Tai lėmė Lietuvos tarptautinę orientaciją į SSRS ir Vokietiją – abi šios revizorinės galios taip pat buvo nepatenkintos Versalio tvarka ir palaikė Lietuvą kaip antibaltišką pleištą prieš Lenkiją.\n\n" +
+                 "2. KLAIPĖDOS KRAŠTO ODISĖJA:\n" +
+                 "• Klaipėdos prijungimas (1923–1924 m.) – Lietuva suorganizavo sukilimą, jėga išstūmė prancūzų įgula, o Ambasadorių konferencija 1924 m. pasirašė Klaipėdos konvenciją, pripažindama kraštą Lietuvai kaip autonominį vienetą. Tai suteikė šaliai gyvybiškai svarbų priėjimą prie jūros.\n" +
+                 "• Klaipėdos atplėšimas (1939 m. kovas) – po sėkmingos Austrijos ir Čekoslovakijos aneksijos, J. Ribentropas pateikė žodinį ultimatumą J. Urbšiui. Lietuva, neturėdama sąjungininkų paramos, buvo priversta pasirašyti sutartį ir atiduoti Klaipėdos kraštą Trečiajam reichui.\n\n" +
+                 "3. TARPUKARIO VALSTYBĖS FINIŠAS:\n" +
+                 "• Lenkijos ultimatumas (1938 m. kovas) – pasinaudojusi pasienio incidentu, Lenkija pareikalavo besąlygiškai užmegzti diplomatinius santykius (tai reiškė formalų Vilniaus atsisakymą). Lietuva ultimatumą priėmė.\n" +
+                 "• Lietuvos–SSRS savitarpio pagalbos sutartis (1939 m. spalis) – po Molotovo-Ribentropo pakto ir Lenkijos žlugimo, SSRS privertė Lietuvą pasirašyti sutartį. Lietuvai buvo grąžintas Vilnius, tačiau šalyje dislokuotos „Trojos arkliu“ tapusios raudonosios armijos įgulos (20 tūkst. karių), kas tiesiogiai paruošė dirvą pilnai 1940 m. birželio okupacijai."
+      },
+      {
+        id: 11,
+        title: "9. Dviejų karų po pasaulinių karų palyginimas",
+        date: "2026-06-08",
+        author: "partizanai.net",
+        category: "Lietuva",
+        tags: ["1918-1920", "1944-1953", "partizanai", "savanoriai"],
+        excerpt: "Lietuvos nepriklausomybės karo (1918–1920 m.) ir Partizanų karo (1944–1953 m.) lyginamoji analizė.",
+        content: "Lyginamoji analizė tarp dviejų esminių Lietuvos XX amžiaus karinių konfliktų:\n\n" +
+                 "1. NEPRIKLAUSOMYBĖS KARAS (1918–1920 m.):\n" +
+                 "• Tikslas: Apginti ką tik paskelbtą naują Lietuvos valstybę.\n" +
+                 "• Priešininkai: Bolševikai, bermontininkai, Lenkijos kariuomenė.\n" +
+                 "• Organizacija: Reguliari Lietuvos kariuomenė, savanoriai, Šaulių sąjunga.\n" +
+                 "• Rezultatas: PERGALĖ. Valstybė išsaugojo nepriklausomybę.\n" +
+                 "• Tarptautinis kontekstas: Antantės šalys rėmė kovą prieš bolševizmą, Vokietija teikė paramą.\n\n" +
+                 "2. PARTIZANŲ KARAS (1944–1953 m.):\n" +
+                 "• Tikslas: Atkurti nepriklausomą demokratinę valstybę, kovojant prieš sovietų okupaciją.\n" +
+                 "• Priešininkai: SSRS represinė sistema (NKVD, MGB), stribai.\n" +
+                 "• Organizacija: LLKS (Lietuvos Laisvės Kovos Sąjūdis), bunkeriai, karinė drausmė.\n" +
+                 "• Rezultatas: Karine prasme pralaimėta, tačiau išreikštas masinis tautos pasipriešinimas."
+      },
+      {
+        id: 27,
+        title: "9.1. Laisvės kovų žodynas: Nuo savanorio iki partizanų rėmėjo",
+        date: "2026-06-24",
+        author: "partizanai.net",
+        category: "Lietuva",
+        tags: ["sąvokos", "partizanai", "savanoriai"],
+        excerpt: "Svarbiausios sąvokos, apibrėžiančios dvi Lietuvos karines epochas: reguliarios kariuomenės kūrimąsi ir pogrindinį pasipriešinimą.",
+        content: "1. NEPRIKLAUSOMYBĖS KOVŲ (1918–1920 M.) SĄVOKOS:\n" +
+                 "• Savanoris – asmuo, savo noru įstojęs į besikuriančią Lietuvos kariuomenę ginti šalies nepriklausomybės (pirmieji šaukimai buvo savanoriški, žemė žadėta kaip atlygis).\n" +
+                 "• Mobilizacija – valstybės vykdomas karinei prievolei pavaldžių asmenų ir išteklių šaukimas į reguliariąją kariuomenę karo atveju (Lietuvoje pradėta 1919 m.).\n" +
+                 "• Bolševikai – radikalūs Rusijos komunistai, siekę ginklu eksportuoti pasaulinę revoliuciją ir atkurti buvusios Rusijos imperijos sienas (Lietuvoje įkūrė marionetinę Litbelo respubliką).\n" +
+                 "• Bermontininkai – provokiška rusų generolo P. Bermonto-Avalovo vadovaujama kariuomenė (sudaryta iš rusų karo belaisvių ir vokiečių savanorių), 1919 m. plėšikavusi Šiaurės Lietuvoje.\n" +
+                 "• Demarkacinė linija – laikina, sutartinė linija (kariuomenių atskyrimo riba), skirianti kariaujančias puses iki sudarant galutinę taikos sutartį (Lietuvos ir Lenkijos atveju kelis kartus keitėsi, užfiksavo Vilniaus netektį).\n\n" +
+                 "2. PARTIZANŲ KARO (1944–1953 M.) SĄVOKOS:\n" +
+                 "• Partizaninis karas – ginkluotas pasipriešinimas prieš okupacinę valdžią, vykdomas ne reguliarios kariuomenės, o vietinių gyventojų būrių, taikančių slapstymosi, netikėtų užpuolimų ir sabotažo taktiką.\n" +
+                 "• Partizanų rėmėjas – civilis asmuo (pogrindininkas), kuris pats nekovojo su ginklu miške, bet tiekdavo partizanams maistą, vaistus, žvalgybinę informaciją, slėpė bunkerius ir platino spaudą.\n" +
+                 "• Lietuvos laisvės kovos sąjūdis (LLKS) – 1949 m. įkurta vieninga politinė ir karinė partizanų organizacija, centralizavusi visą pasipriešinimą Lietuvoje.\n" +
+                 "• NKVD (MVD/MGB) – Sovietų Sąjungos represinis organas (vidaus reikalų liaudies komisariatas), vykdęs žiaurius Lietuvos gyventojų trėmimus, partizanų sekimą ir likvidavimą.\n" +
+                 "• Stribas (liaudies gynėjas) – vietinis sovietų kolaborantas, ginkluotas okupacinės valdžios talkininkas, verbavęsis kovai prieš partizanus, plėšęs ir terorizavęs civilius gyventojus."
+      },
+      {
+        id: 28,
+        title: "9.2. Keturi strategai: Nuo generalissimuso iki Miško brolių vadų",
+        date: "2026-06-25",
+        author: "diplomatija.io",
+        category: "Lietuva",
+        tags: ["asmenybės", "karvedžiai", "partizanai"],
+        excerpt: "Silvestras Žukauskas, Jonas Žemaitis, Adolfas Ramanauskas, Juozas Lukša – keturios karinės lyderystės istorijos.",
+        content: "KARINIŲ KONFLIKTŲ LYDERIŲ REIKŠMĖ:\n\n" +
+                 "• Silvestras Žukauskas (1861–1937):\n" +
+                 "  - Pirmasis vyriausiasis Lietuvos kariuomenės vadas Nepriklausomybės kovose. Profesionalus carinės armijos generolas, reorganizavęs lietuvių savanorius į reguliarią armiją. Sukūrė ir įgyvendino Zarasų operacijos planą (išstūmė bolševikus) ir sustabdė bermontininkus.\n\n" +
+                 "• Jonas Žemaitis-Vytautas (1909–1954):\n" +
+                 "  - LLKS Tarybos pirmininkas, partizanų generolas. Sukūrė vieningą pasipriešinimo sistemą, pasirašė 1949 m. Deklaraciją. Ketvirtojo Lietuvos prezidento statusą turėjęs vadovas, simbolizavęs politinį pasipriešinimo tęstinumą bunkeriuose.\n\n" +
+                 "• Adolfas Ramanauskas-Vanagas (1918–1957):\n" +
+                 "  - Pietų Lietuvos partizanų srities vadas, LLKS Gynybos pajėgų vadas, pedagogas ir karinis taktikas. Suorganizavo stipriausius karinius partizanų vienetus, sugebėjo ilgus metus išlaikyti karinę drausmę ir parašė unikalius memuarus apie miško brolių kovą.\n\n" +
+                 "• Juozas Lukša-Daumantas (1921–1951):\n" +
+                 "  - Vienas aktyviausių partizanų vadų ir legendinis žvalgas. Jis du kartus prasiveržė pro Geležinę uždangą į Vakarus (1947 ir 1948 m.), perdavė žinias apie sovietų terorą ir Holodomorą Lietuvoje, parvežė paramą, o parašiutu grįžęs tęsti kovos buvo išduotas ir žuvo."
+      },
+      {
+        id: 29,
+        title: "9.3. Dviejų karų analizė: Nuo valstybės pergalės iki pasiaukojimo bunkeryje",
+        date: "2026-06-26",
+        author: "istorija.exe",
+        category: "Lietuva",
+        tags: ["mūšiai", "deklaracija", "palyginimas", "istorija"],
+        excerpt: "Gili Nepriklausomybės ir Partizanų karų analizė: tarptautinis kontekstas, kariavimo pobūdis ir istoriniai lūžiai.",
+        content: "1. TARPTAUTINIS IR POLITINIS KONTEKSTAS (Panašumai ir skirtumai):\n" +
+                 "• 1918–1920 m. kontekstas (Palankus): Griuvo didžiosios imperijos (Rusijos, Vokietijos). Vakarų šalys (Antantė) rėmė „sanitarinio kordono“ (buferinių valstybių) kūrimą prieš bolševizmą. Vokietija teikė paskolas ir ginklus.\n" +
+                 "• 1944–1953 m. kontekstas (Nepalankus): SSRS tapo Antrojo pasaulinio karo nugalėtoja, galingiausia karine jėga Europoje. Jaltos ir Potsdamo konferencijose Vakarai paliko Lietuvą Stalino įtakos sferoje. Partizanai kovojo visiškoje tarptautinėje izoliacijoje, bergždžiai tikėdamiesi karo tarp JAV ir SSRS.\n\n" +
+                 "2. KONFLIKTŲ POBŪDIS IR TAKTIKA:\n" +
+                 "• Priešininkai:\n" +
+                 "  - 1918–1920 m.: trys skirtingi frontai (bolševikai, bermontininkai, lenkai).\n" +
+                 "  - 1944–1953 m.: vienas totalitarinis priešas su neribotais resursais (SSRS kariuomenė ir NKVD).\n" +
+                 "• Kariavimo taktika:\n" +
+                 "  - Nepriklausomybės kare kovojo reguliari Lietuvos kariuomenė fronto linijose, vykdė atviras karines operacijas (pvz., Zarasų operacija prieš bolševikus; Radviliškio kautynės (1919 m.), kur sutriuškinti bermontininkai; Giedraičių-Širvintų mūšis (1920 m.), kur sustabdyta L. Želigovskio lenkų ofensyva).\n" +
+                 "  - Partizanų kare nebuvo fronto linijos. Tai buvo asimetrinis, partizaninis karas. Pradžioje (1944–1945 m.) kariauta didesniais būriais, bet patyrus nuostolių pereita prie griežto pogrindžio – mažų grupelių (3–5 kariai), požeminių bunkerių sistemos, naktinių reidų ir sabotažo.\n\n" +
+                 "3. PASEKMĖS IR REIKŠMĖ:\n" +
+                 "• Nepriklausomybės karas baigėsi PERGALE: valstybė apginta, pasirašytos taikos sutartys, įtvirtintos sienos ir užtikrintas 22 metų taikaus modernizacijos laikotarpis.\n" +
+                 "• Partizanų karas baigėsi kariniu pralaimėjimu (visiškas pajėgų sunaikinimas), tačiau turėjo milžinišką moralinę reikšmę. Jis parodė pasauliui, kad Lietuva į SSRS sudėtį įstojo ne savo noru, o buvo okupuota.\n\n" +
+                 "4. TIPINIS DOKUMENTAS – 1949 M. VASARIO 16 D. DEKLARACIJA:\n" +
+                 "• LLKS Tarybos pasirašytas dokumentas bunkeriuose Minaičiuose. Ji paskelbė, kad LLKS Taryba yra vienintelė teisėta valdžia Lietuvoje, o būsimasis valstybės atstatymas turi vykti demokratiniais parlamentiniais pagrindais (1918 m. dvasia). Šis dokumentas teisiškai tęsė Lietuvos suverenitetą."
+      },
+      {
+        id: 12,
+        title: "5. XX a. antrosios pusės dvipolė sistema ir Šaltasis karas",
+        date: "2026-06-04",
+        author: "global.net",
+        category: "pasaulis",
+        tags: ["saltasis-karas", "nato", "dvipolis-pasaulis"],
+        excerpt: "Jaltos-Potsdamo tvarka, ideologinis bei karinis pasaulio pasidalijimas tarp JAV ir SSRS, didžiausios krizės.",
+        content: "1. DVIPOLIO PASAULIO SUSIFORMAVIMAS:\n" +
+                 "• Po Antrojo pasaulinio karo susiformavo Jaltos-Potsdamo TS sistema. Pasaulinis pasidalijo į du blokus: Vakarų ir Rytų.\n\n" +
+                 "2. ŠALTOJO KARO BRUOŽAI IR STRATEGIJOS:\n" +
+                 "• JAV Trumeno doktrina ir Maršalo planas (komunizmo sulaikymas).\n" +
+                 "• Karinių blokų kūrimas: NATO (1949 m.) ir Varšuvos sutarties organizacija (1955 m.).\n" +
+                 "• Ginklavimosi varžybos ir abipusio garantuoto sunaikinimo doktrina.\n\n" +
+                 "3. PAGRINDINĖS KRIZĖS IR PERLAUŽOS:\n" +
+                 "• Berlino blokada (1948–1949 m.) ir Berlino sienos statyba (1961 m.).\n" +
+                 "• Karibų krizė (1962 m.) – arčiausias taškas iki branduolinio karo.\n" +
+                 "• Regioniniai proxy karai: Korėjos, Vietnamo, Afganistano karai.\n" +
+                 "• Dvipolės sistemos pabaiga: SSRS žlugimas (1991 m.) užbaigė Šaltąjį karą."
+      },
+      {
+        id: 15,
+        title: "5.1. Dvipolis pasaulis: Ideologinė kova ir Šaltojo karo sąvokos",
+        date: "2026-06-12",
+        author: "global.net",
+        category: "pasaulis",
+        tags: ["saltasis-karas", "ideologijos", "sąvokos"],
+        excerpt: "Kaip JAV ir SSRS ideologinė aštis bei ginklavimosi varžybos padalijo pasaulį į dvi nesutaikomas stovyklas?",
+        content: "1. ŠALTOJO KARO AVANSCENA: VERTYBĖS IR IDEOLOGIJOS:\n" +
+                 "• Šaltasis karas – geopolitinė, ekonominė ir ideologinė konfrontacija tarp JAV (kapitalizmas, liberali demokratija, žmogaus teisės) ir SSRS (komunizmas, totalitarizmas, planinė ekonomika).\n\n" +
+                 "2. PAGRINDINIŲ SĄVOKŲ ŽODYNĖLIS:\n" +
+                 "• Geležinė uždanga – V. Čerčilio išpopuliarinta sąvoka, reiškianti ideologinę, politinę ir karinę sieną, visiškai atskyrusią komunistinį Rytų bloką nuo demokratinių Vakarų.\n" +
+                 "• Trumeno doktrina (1947 m.) – JAV užsienio politikos principas, pasiryžimas remti laisvas tautas, kovojančias prieš komunizmo plėtrą (sulaikymo politika).\n" +
+                 "• Maršalo planas – JAV finansinės paramos programa, skirta sugriautos Europos ekonomikai atstatyti, siekiant sustabdyti skurdo gimdomą komunizmo populiarumą.\n" +
+                 "• NATO (1949 m.) – Šiaurės Atlanto sutarties organizacija; Vakarų šalių gynybinis aljansas kolektyviniam saugumui užtikrinti.\n" +
+                 "• Varšuvos sutarties organizacija (1955 m.) – SSRS vadovaujamas Rytų bloko valstybių karinis-politinis aljansas, įkurtas kaip atsakas į NATO.\n" +
+                 "• Ginklavimosi varžybos – karinių pajėgumų, ypač branduolinio arsenalo, masinis didinimas siekiant strateginio pranašumo.\n" +
+                 "• Branduolinis karas – potencialus konfliktas naudojant branduolinius ginklus, kurio baimė (abipusis garantuotas sunaikinimas) paradoksaliai stabdė tiesioginį JAV ir SSRS susidūrimą.\n" +
+                 "• Lokalinis karas – riboto masto konfliktas konkrečiame regione, neišaugęs į pasaulinį karą."
+      },
+      {
+        id: 16,
+        title: "5.2. Penki lyderiai ant branduolinio slenksčio",
+        date: "2026-06-13",
+        author: "diplomatija.io",
+        category: "pasaulis",
+        tags: ["lyderiai", "krizės", "politika"],
+        excerpt: "Nuo Čerčilio Geležinės uždangos pranašystės iki Reigano strateginio spaudimo – asmenybės, valdžiusios Šaltojo karo eigą.",
+        content: "ŠALTOJO KARO LYDERIŲ REIKŠMĖ:\n\n" +
+                 "• Vinstonas Čerčilis (Winston Churchill):\n" +
+                 "  - Istorine kalba Fultone (1946 m.) viešai įvardijo Rytų Europos sovietizaciją ir nubrėžė 'Geležinę uždangą', taip simboliškai paskelbdamas Šaltojo karo pradžią.\n\n" +
+                 "• Nikita Chruščiovas (Nikita Khrushchev):\n" +
+                 "  - SSRS vadovas destalinizacijos laikotarpiu. Vykdė agresyvią užsienio politiką, inicijavo Berlyno sienos statybą ir Karibų krizę, tačiau galiausiai buvo priverstas ieškoti kompromisų.\n\n" +
+                 "• Džonas Kenedis (John F. Kennedy):\n" +
+                 "  - JAV prezidentas, suvaldęs Karibų krizę. Jo tvirtumas ir diplomatija padėjo išvengti branduolinės katastrofos; aktyviai rėmė Vakarų Berlyną ('Ich bin ein Berliner').\n\n" +
+                 "• Leonidas Brežnevas (Leonid Brezhnev):\n" +
+                 "  - SSRS vadovas, pasižymėjęs politine stagnacija. Įteisino 'Brežnevo doktriną' (ribotą Rytų bloko šalių suverenitetą), įvėlė SSRS į pražūtingą Afganistano karą.\n\n" +
+                 "• Ronaldas Reiganas (Ronald Reagan):\n" +
+                 "  - JAV prezidentas, pavadinęs SSRS 'Blogio imperija'. Padidino karinį spaudimą (strateginė gynybos iniciatyva), paspartino ginklavimosi varžybas ir taip ekonomiškai išsekino bei sugriovė sovietinį bloką."
+      },
+      {
+        id: 17,
+        title: "5.3. Karai svetimomis rankomis ir technologijų lenktynės",
+        date: "2026-06-14",
+        author: "istorija.exe",
+        category: "pasaulis",
+        tags: ["karai", "kosmosas", "vietnamas", "krizės"],
+        excerpt: "Karai svetimose teritorijose (Proxy wars), Berlyno siena, Karibų krizė bei technologinis viršenybės demonstravimas kosminėse lenktynėse.",
+        content: "1. TECHNOLOGINIAI IR KARO PRAMONĖS PASIEKIMAI:\n" +
+                 "• Karo pramonė tapo abiejų pusių mokslo varikliu (vandenilinės bombos, tarpžemyninės raketos).\n" +
+                 "• Kosminės lenktynės – prestižo ir karinės technologijos demonstravimas: SSRS paleido pirmąjį palydovą 'Sputnik' (1957 m.) ir J. Gagariną (1961 m.), o JAV pasiekė kulminaciją išsilaipindama Mėnulyje (Apollon-11, 1969 m.).\n\n" +
+                 "2. SVARBIUSI ŠALTOJO KARO ĮVYKIAI IR KRIZĖS:\n" +
+                 "• Korėjos karas (1950–1953 m.) – pirmasis karas svetimoje teritorijoje (Proxy war). JAV ir JT rėmė Pietų Korėją, Kinija ir SSRS – Šiaurės Korėją. Šalis liko padalyta ties 38-ąja lygiagrete.\n" +
+                 "• Berlyno sienos statyba (1961 m.) – Rytų Vokietijos pastatyta siena, turėjusi sustabdyti masinį gyventojų bėgimą į Vakarų Berlyną. Tapo Europos padalijimo simboliu.\n" +
+                 "• Karibų krizė (1962 m.) – SSRS slaptas branduolinių raketų dislokavimas Kuboje. Pavojingiausias Šaltojo karo taškas, pasibaigęs raketų išmontavimu mainais į JAV pažadą nepulti Kubos ir patraukti raketas iš Turkijos.\n\n" +
+                 "3. MILŽINŲ NESĖKMĖS SVETIMOSE ŽEMĖSE:\n" +
+                 "• Vietnamo karas (1965–1973 m.) – JAV nesėkmingas bandymas apsaugoti Pietų Vietnamą nuo komunistinio Šiaurės Vietnamo ir partizanų (Vietkongo). JAV patyrė didžiulį visuomenės spaudimą ir kariuomenę išvedė.\n" +
+                 "• Afganistano karas (1979–1992 m.) – SSRS invazija siekiant išlaikyti prokomunistinį režimą. JAV remiami modžahedai partizaniniu karu išsekino sovietų armiją. Karas tapo 'SSRS Vietnamu' ir prisidėjo prie imperijos žlugimo."
+      }
+    ];
+
+    let currentCategory = 'All';
+    let currentPage = 1;
+    const postsPerPage = 7;
+    const searchInput = document.getElementById('search');
+    const postsContainer = document.getElementById('posts');
+    const resultsCountEl = document.getElementById('resultsCount');
+    const paginationInfo = document.getElementById('paginationInfo');
+    const prevPageBtn = document.getElementById('prevPageBtn');
+    const nextPageBtn = document.getElementById('nextPageBtn');
+
+    function getFilteredPosts() {
+      const query = searchInput ? searchInput.value.toLowerCase() : '';
+      return postsData.filter(post => {
+        const matchesCategory = currentCategory === 'All' || post.category === currentCategory;
+        const matchesSearch = post.title.toLowerCase().includes(query) ||
+                              post.excerpt.toLowerCase().includes(query) ||
+                              post.tags.some(t => t.toLowerCase().includes(query));
+        return matchesCategory && matchesSearch;
+      });
+    }
+
+    function renderPosts() {
+      if (!postsContainer) return;
+
+      const filtered = getFilteredPosts();
+      const totalPages = Math.max(1, Math.ceil(filtered.length / postsPerPage));
+      if (currentPage > totalPages) currentPage = totalPages;
+
+      const start = (currentPage - 1) * postsPerPage;
+      const pagePosts = filtered.slice(start, start + postsPerPage);
+
+      if (resultsCountEl) resultsCountEl.textContent = filtered.length;
+      if (paginationInfo) paginationInfo.textContent = `Page ${currentPage} of ${totalPages}`;
+
+      if (prevPageBtn) prevPageBtn.disabled = currentPage === 1;
+      if (nextPageBtn) nextPageBtn.disabled = currentPage === totalPages;
+
+      postsContainer.innerHTML = pagePosts.map(post => `
+        <article class="post">
+          <div class="head">
+            <div class="meta">
+              <div class="title">${post.title}</div>
+              <div class="sub">
+                <span>By ${post.author}</span> • <span>${post.date}</span>
+                ${post.tags.map(t => `<span class="tag"><span class="dot"></span>${t}</span>`).join('')}
+              </div>
+            </div>
+            <div class="tools">
+              <span class="tag" style="border-style:solid; font-weight:700;">${post.category}</span>
+            </div>
+          </div>
+          <div class="body">
+            <div class="preview"></div>
+            <div class="excerpt">${post.excerpt}</div>
+          </div>
+          <div class="footer">
+            <span class="readlink" onclick="openModal(${post.id})">>> Read Full Post</span>
+            <div class="like"><span class="heart"></span> <span style="font-size:12px; font-weight:700; margin-left:4px;">Like</span></div>
+          </div>
+        </article>
+      `).join('');
+    }
+
+    const chips = {
+      'All': document.getElementById('chipAll'),
+      'Lietuva': document.getElementById('chipDesign'),
+      'pasaulis': document.getElementById('chipDev'),
+      'Totaliniai Karai': document.getElementById('chipDev'),
+      'Ikimodernieji': document.getElementById('chipDev'),
+    };
+
+    Object.keys(chips).forEach(cat => {
+      if (chips[cat]) { 
+        chips[cat].addEventListener('click', () => {
+          Object.keys(chips).forEach(c => chips[c] && chips[c].setAttribute('data-active', 'false'));
+          chips[cat].setAttribute('data-active', 'true');
+          currentCategory = cat;
+          currentPage = 1;
+          renderPosts();
+        });
+      }
+    });
+
+    if (searchInput) {
+      searchInput.addEventListener('input', () => {
+        currentPage = 1;
+        renderPosts();
+      });
+    }
+
+    if (prevPageBtn) {
+      prevPageBtn.addEventListener('click', () => {
+        if (currentPage > 1) {
+          currentPage--;
+          renderPosts();
+        }
+      });
+    }
+
+    if (nextPageBtn) {
+      nextPageBtn.addEventListener('click', () => {
+        const filtered = getFilteredPosts();
+        const totalPages = Math.max(1, Math.ceil(filtered.length / postsPerPage));
+        if (currentPage < totalPages) {
+          currentPage++;
+          renderPosts();
+        }
+      });
+    }
+
+    const modalBackdrop = document.getElementById('modalBackdrop');
+    const errorBackdrop = document.getElementById('errorBackdrop');
+    
+    window.openModal = function(id) {
+      const post = postsData.find(p => p.id === id);
+      if (!post) return;
+      if (document.getElementById('modalTitle')) document.getElementById('modalTitle').textContent = post.title;
+      if (document.getElementById('modalSub')) document.getElementById('modalSub').textContent = `By ${post.author} | ${post.date} | Category: ${post.category}`;
+      if (document.getElementById('modalContent')) document.getElementById('modalContent').textContent = post.content;
+      if (modalBackdrop) modalBackdrop.classList.add('show');
+    };
+
+    if (document.getElementById('btnCloseModal') && modalBackdrop) {
+      document.getElementById('btnCloseModal').addEventListener('click', () => modalBackdrop.classList.remove('show'));
+    }
+    if (document.getElementById('btnSimulateError') && errorBackdrop) {
+      document.getElementById('btnSimulateError').addEventListener('click', () => errorBackdrop.classList.add('show'));
+    }
+    if (document.getElementById('btnOk') && errorBackdrop) {
+      document.getElementById('btnOk').addEventListener('click', () => errorBackdrop.classList.remove('show'));
+    }
+    if (document.getElementById('btnAbout')) {
+      document.getElementById('btnAbout').addEventListener('click', () => alert("DelarNet Blog v1.0 - Sukurta ruošiantis istorijos egzaminui!"));
+    }
+    if (document.getElementById('btnNewPost')) {
+      document.getElementById('btnNewPost').addEventListener('click', () => alert("Sukurti naują įrašą galėsite prijungę tikrą TVS / Backend sistemą."));
+    }
+
+    window.addEventListener('keydown', (e) => {
+      if (e.key.toLowerCase() === 'f' && searchInput && document.activeElement !== searchInput) {
+        e.preventDefault();
+        searchInput.focus();
+      }
+      if (e.key === 'Escape') {
+        if (modalBackdrop) modalBackdrop.classList.remove('show');
+        if (errorBackdrop) errorBackdrop.classList.remove('show');
+      }
+    });
+
+    renderPosts();
+</script>
+
+</body>
+</html>
